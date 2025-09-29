@@ -68,22 +68,28 @@ app.use(cookieParser());
 // app.use(xss());
 app.use(morgan('combined'));  //logging middleware
 
-const allowedOrigins = [process.env.FRONTEND_URL];
+const allowedOrigins = process.env.FRONTEND_URL.split(",").map(o =>
+  o.replace(/\/+$/, "") // remove trailing slash
+);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // normalize origin from request
+      const cleanOrigin = origin ? origin.replace(/\/+$/, "") : origin;
+
+      if (!cleanOrigin || allowedOrigins.includes(cleanOrigin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS: " + origin));
+        console.error("❌ Blocked by CORS:", cleanOrigin);
+        callback(new Error("Not allowed by CORS: " + cleanOrigin));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
   })
 );
+
 // We need rawBody for webhook signature verification. Save rawBody on request.
 app.use(express.json({
   verify: (req, res, buf) => {
