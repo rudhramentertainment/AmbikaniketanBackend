@@ -69,22 +69,25 @@ app.use(cookieParser());
 app.use(morgan('combined'));  //logging middleware
 
 const allowedOrigins = process.env.FRONTEND_URL.split(",").map(o =>
-  o.replace(/\/+$/, "") // remove trailing slash
+  o.trim().replace(/\/+$/, "")
 );
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // normalize origin from request
-      const cleanOrigin = origin ? origin.replace(/\/+$/, "") : origin;
+   origin: function (origin, callback) {
+  const cleanOrigin = origin ? origin.trim().replace(/\/+$/, "") : origin;
 
-      if (!cleanOrigin || allowedOrigins.includes(cleanOrigin)) {
-        callback(null, true);
-      } else {
-        console.error("❌ Blocked by CORS:", cleanOrigin);
-        callback(new Error("Not allowed by CORS: " + cleanOrigin));
-      }
-    },
+  console.log("🌐 Incoming origin:", cleanOrigin);
+  console.log("✅ Allowed origins:", allowedOrigins);
+
+  if (!cleanOrigin || allowedOrigins.includes(cleanOrigin)) {
+    callback(null, true);
+  } else {
+    console.error("❌ Blocked by CORS:", cleanOrigin);
+    callback(new Error("Not allowed by CORS: " + cleanOrigin));
+  }
+},
+
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
   })
