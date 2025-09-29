@@ -17,11 +17,29 @@ import event from './routes/eventRoutes.js';
 import path from "path";
 import webhooksroutes from "./routes/webhookRoutes.js";
 
+//cameraRoute
+
+import camera from "./routes/cameraRoute.js";
+
+//Camera
+
+import fetch from "node-fetch";
+import { URLSearchParams } from 'url';
+
+
+const CAM_HOST = process.env.CAM_HOST;
+const CAM_PORT = process.env.CAM_PORT || 8000;
+const CAM_LOGIN_PATH = process.env.CAM_LOGIN_PATH || "/doc/page/login.asp?_1758719128786";
+const CAM_USER = process.env.CAM_USER;
+const CAM_PASS = process.env.CAM_PASS;
+const CAM_STREAM_PATH = process.env.CAM_STREAM_PATH || "/preview.asp";
+
 
 const app = express();
 
 dotenv.config();
 
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -50,13 +68,22 @@ app.use(cookieParser());
 // app.use(xss());
 app.use(morgan('combined'));  //logging middleware
 
-app.use(cors({
-  origin : [process.env.FRONTEND_URL],
-   methods: ["GET", "POST", "DELETE","PUT"],
-   credentials : true,
-   exposedHeaders: ["Content-Range", "X-Content-Range"],
-   credentials: true,
-}));
+const allowedOrigins = process.env.FRONTEND_URL.split(",");
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS: " + origin));
+      }
+    },
+    methods: ["GET", "POST", "DELETE", "PUT"],
+    credentials: true,
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+  })
+);
 
 // We need rawBody for webhook signature verification. Save rawBody on request.
 app.use(express.json({
@@ -73,8 +100,7 @@ app.use('/api/message',message);
 app.use('/api/homevideo',homeVideo);
 app.use("/api/galleryphoto",gallery);
 app.use("/api/event",event);
-
- app.use("/api/webhook", webhooksroutes);
+app.use("/api/webhook", webhooksroutes);
 
 app.options("/api/homevideo/stream/:filename", cors());
 
@@ -90,9 +116,13 @@ app.use(
   express.static(path.join(process.cwd(), "uploads"))
 );
 
+app.use('/api/camera',camera);
+
+app.get("/", (req, res) => res.send("Camera proxy server running"));
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
+   console.log(`MJPEG endpoint: http://localhost:${process.env.PORT}/api/camera/mjpeg`);
 });
 
 connectDB();

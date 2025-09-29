@@ -3,54 +3,206 @@ import Admin from '../models/Admin.js';
 import jwt from 'jsonwebtoken';
 import Donation from '../models/Donation.js';
 import createRzpClient from '../utils/razorpayClient.js';
-import generateReceiptPdfAndSave from '../utils/pdfService.js';
+import generateReceiptPdfAndSave from '../utils/generateReceiptPdfAndSave.js';
+import crypto from 'crypto';
+import Session from '../models/Session.js';
+import {parseUserAgent,ipToLocation} from "../utils/sessionUtils.js";
 
 //add admin controller
 export const addAdmin = async (req, res) => {
-    try {
-        const { username, password, email } = req.body;
+  try {
+    const { username, email, password, role, sections } = req.body;
 
-        if (!username || !password || !email) return res.status(400).json({ error: 'Missing fields' });
-
-        const existingAdmin = await Admin.findOne({ username: username.toLowerCase().trim() });
-
-        if (existingAdmin) return res.status(409).json({ error: 'Username already exists'});
-
-        const passwordHash = await Admin.hashPassword(password);
-
-        const newAdmin = new Admin({ username: username.toLowerCase().trim(), passwordHash, email: email.toLowerCase().trim() });
-        await newAdmin.save();
-        res.status(201).json({ message: 'Admin created successfully' });
-    } catch (err) {
-        console.error('addAdmin error', err);
-        res.status(500).json({ error: 'Server error' });
+    const existing = await Admin.findOne({ username });
+    if (existing) {
+      return res.status(400).json({ success: false, message: "Username already exists" });
     }
-}
+
+    const passwordHash = await Admin.hashPassword(password);
+
+    const newAdmin = new Admin({
+      username,
+      email,
+      passwordHash,
+      role: role || "admin",
+      sections: role === "superadmin" ? ["All"] : sections,
+    });
+
+    await newAdmin.save();
+    res.status(201).json({ success: true, message: "Admin created", data: newAdmin });
+  } catch (err) {
+    console.error("Error creating admin:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
+export const updateAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { username, email, password, role, sections } = req.body;
+
+    const admin = await Admin.findById(id);
+    if (!admin) return res.status(404).json({ success: false, message: "Admin not found" });
+
+    if (username) admin.username = username;
+    if (email) admin.email = email;
+    if (role) admin.role = role;
+    if (sections && admin.role === "admin") {
+      admin.sections = sections;
+    }
+
+    if (password) {
+      admin.passwordHash = await Admin.hashPassword(password);
+    }
+
+    await admin.save();
+    res.status(200).json({ success: true, message: "Admin updated", data: admin });
+  } catch (err) {
+    console.error("Error updating admin:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// Fetch logged-in admin details
+export const getMe = async (req, res) => {
+  try {
+    if (!req.admin) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    res.json({
+      success: true,
+      admin: req.admin,
+    });
+  } catch (err) {
+    console.error("Get admin error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const updatePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword, confirmPassword } = req.body;
+
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Get logged in admin (from middleware verifyAdmin)
+    const adminId = req.admin._id;
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, admin.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Old password is incorrect" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(newPassword, salt);
+
+    admin.passwordHash = newHash;
+    await admin.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Update password error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+export const getAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: admins });
+  } catch (err) {
+    console.error("Error fetching admins:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const admin = await Admin.findByIdAndDelete(id);
+    if (!admin) return res.status(404).json({ success: false, message: "Admin not found" });
+
+    res.status(200).json({ success: true, message: "Admin deleted" });
+  } catch (err) {
+    console.error("Error deleting admin:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 
 //login controller
 export const login = async (req, res) => {
-    try {
-        const { username, password  } = req.body;
-        if (!username || !password) return res.status(400).json({ error: 'Missing credentials' });
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ message: 'Missing credentials' });
 
-        const admin = await Admin.findOne({ username :username });
-        if(!admin) return res.status(401).json({ error: 'Invalid username and password' });
+    const admin = await Admin.findOne({ username });
+    if (!admin) return res.status(401).json({ message: 'Invalid username and password' });
 
-        const ok  = await bcrypt.compare(password, admin.passwordHash);
-        if(!ok) return res.status(401).json({ error: 'Invalid username and password' });
+    const ok = await bcrypt.compare(password, admin.passwordHash);
+    if (!ok) return res.status(401).json({ message: 'Invalid username and password' });
 
-        const token = jwt.sign({username : admin.username} , process.env.JWT_SECRET, { expiresIn  : process.env.JWT_EXPIRES_IN || '7d' });
-        const cookieOptions = {
-        httpOnly: true,
+    // create JWT
+    const token = jwt.sign({ id: admin._id, username: admin.username }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+
+    // create server-side session entry
+    const sessionId = crypto.randomBytes(16).toString('hex');
+
+    const ua = req.headers['user-agent'] || "";
+    const { device, browser, os } = parseUserAgent(ua);
+
+    let ip = req.headers['x-forwarded-for']?.split(',')[0] || req.socket?.remoteAddress || req.ip;
+    if (ip?.startsWith('::ffff:')) ip = ip.replace('::ffff:', ''); // normalize IPv4-mapped IPv6
+
+    
+    const location = ipToLocation(ip);
+
+   await Session.create({
+      adminId: admin._id,
+      sessionId,
+      userAgent: ua,
+      device,
+      browser,
+      os,
+      ip,
+      location,
+      isActive: true,
+      lastSeenAt: new Date(),
+    });
+    // Set cookies
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: 'Strict',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     };
     res.cookie('admin_token', token, cookieOptions);
-    res.json({ message: 'Login successful' });
-    } catch (error) {
-        console.error('admin login', error);
-    res.status(500).json({ error: 'Server error' });
-    }
-}
+    res.cookie('session_id', sessionId, cookieOptions);
 
+    res.json({
+      success: true,
+      message: 'Login successful',
+      user: { username: admin.username, role: admin.role },
+    });
+  } catch (err) {
+    console.error("admin login", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 //logout controller
 export const logout = (req, res) => {
     res.clearCookie('admin_token');

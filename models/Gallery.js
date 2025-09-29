@@ -30,7 +30,7 @@ const gallerySectionSchema = new mongoose.Schema(
         "EyeHospital",
         "OldAge",
         "Physiotherapy",
-        "Nursing Hospital",
+        "NursingHospital",
       ], // restricts to predefined sections
     },
     photos: [photoSchema], // array of photos inside section

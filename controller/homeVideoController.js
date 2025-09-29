@@ -72,3 +72,53 @@ export const getAllVideos = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+export const updateVideo = async (req, res) => {
+  try {
+    const { _id, title, description, isFeatured } = req.body;
+
+    // Find video by ID
+    const video = await HomeVideo.findById(_id);
+    if (!video) {
+      return res.status(404).json({ success: false, message: "Video not found" });
+    }
+
+    // Handle featured logic
+    if (isFeatured === "true" || isFeatured === true) {
+      await HomeVideo.updateMany({}, { isFeatured: false });
+      video.isFeatured = true;
+    } else {
+      video.isFeatured = false;
+    }
+
+    // Update fields
+    if (title) video.title = title;
+    if (description) video.description = description;
+
+    // If new video file is uploaded, replace the old file
+    if (req.file) {
+      // Construct new file path
+      const newVideoUrl = `/uploads/videos/${req.file.filename}`;
+
+      // Delete old file from disk if it exists
+      const oldFilePath = path.join(process.cwd(), video.videoUrl.replace(/^\//, ""));
+      if (fs.existsSync(oldFilePath)) {
+        fs.unlinkSync(oldFilePath);
+      }
+
+      // Update video path
+      video.videoUrl = newVideoUrl;
+    }
+
+    await video.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Video updated successfully",
+      data: video,
+    });
+  } catch (error) {
+    console.error("Error updating video:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

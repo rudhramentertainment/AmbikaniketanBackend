@@ -13,6 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.1.2",
+    "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -21,13 +23,19 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^8.1.0",
     "express-validator": "^7.2.1",
+    "geoip-lite": "^1.4.10",
     "helmet": "^8.1.0",
+    "jar": "^0.3.4",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.8.7",
+    "mongoose": "^8.18.1",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+    "node-fetch": "^2.7.0",
+    "nodemailer": "^7.0.6",
     "nodemon": "^3.1.10",
     "pdfkit": "^0.17.2",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "tough-cookie": "^6.0.0",
+    "ua-parser-js": "^2.0.5"
   }
 }

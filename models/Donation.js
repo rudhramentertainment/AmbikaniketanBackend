@@ -52,7 +52,7 @@ const DonationSchema = new mongoose.Schema(
     razorpay: {
       orderId: {
         type: String,
-        required: [true, "Razorpay Order ID is required"],
+        default: null,
       },
       paymentId: {
         type: String,
