@@ -68,27 +68,20 @@ app.use(cookieParser());
 // app.use(xss());
 app.use(morgan('combined'));  //logging middleware
 
-const allowedOrigins = process.env.FRONTEND_URL.split(",");
+const allowedOrigins = [process.env.FRONTEND_URL];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowed = allowedOrigins.some((allowedOrigin) => {
-        if (allowedOrigin.includes("netlify.app")) {
-          // allow any netlify subdomain
-          return origin && origin.endsWith("netlify.app");
-        }
-        return origin === allowedOrigin;
-      });
-
-      if (!origin || allowed) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS: " + origin));
       }
     },
-    methods: ["GET", "POST", "DELETE", "PUT"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
   })
 );
 // We need rawBody for webhook signature verification. Save rawBody on request.
