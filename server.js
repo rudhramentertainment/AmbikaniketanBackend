@@ -73,7 +73,15 @@ const allowedOrigins = process.env.FRONTEND_URL.split(",");
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      const allowed = allowedOrigins.some((allowedOrigin) => {
+        if (allowedOrigin.includes("netlify.app")) {
+          // allow any netlify subdomain
+          return origin && origin.endsWith("netlify.app");
+        }
+        return origin === allowedOrigin;
+      });
+
+      if (!origin || allowed) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS: " + origin));
@@ -81,10 +89,8 @@ app.use(
     },
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
-    exposedHeaders: ["Content-Range", "X-Content-Range"],
   })
 );
-
 // We need rawBody for webhook signature verification. Save rawBody on request.
 app.use(express.json({
   verify: (req, res, buf) => {
