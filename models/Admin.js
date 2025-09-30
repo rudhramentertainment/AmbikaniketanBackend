@@ -25,7 +25,7 @@ const adminSchema = new mongoose.Schema(
     sections: [
       {
         type: String,
-        enum: ["Dashboard", "HomeVideo", "Gallery", "Events", "UserInformation","Donation","Admin" ,"Profile","UpdatePassword","LoginSessions","All"],
+        enum: ["Dashboard", "HomeVideo", "Gallery", "Events", "UserInformation","Donations","Admin" ,"Profile","UpdatePassword","LoginSessions","Message","All"],
       },
     ],
   },
