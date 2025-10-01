@@ -27,12 +27,6 @@ import fetch from "node-fetch";
 import { URLSearchParams } from 'url';
 
 
-const CAM_HOST = process.env.CAM_HOST;
-const CAM_PORT = process.env.CAM_PORT || 8000;
-const CAM_LOGIN_PATH = process.env.CAM_LOGIN_PATH || "/doc/page/login.asp?_1758719128786";
-const CAM_USER = process.env.CAM_USER;
-const CAM_PASS = process.env.CAM_PASS;
-const CAM_STREAM_PATH = process.env.CAM_STREAM_PATH || "/preview.asp";
 
 
 const app = express();
