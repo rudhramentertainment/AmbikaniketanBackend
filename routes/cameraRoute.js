@@ -4,7 +4,7 @@ import loginAndGetCookie from "../middleware/camControle.js";
 
 const router = express.Router();
 
-router.get("/mjpeg", getCameraStream);
+router.get("/mjpeg", getCameraStream)
 
 router.get("/cookie", async (req, res) => {
   try {

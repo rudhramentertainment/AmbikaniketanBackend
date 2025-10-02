@@ -125,7 +125,7 @@ app.get("/", (req, res) => res.send("Camera proxy server running"));
 
 app.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
-   console.log(`MJPEG endpoint: http://localhost:${process.env.PORT}/api/camera/mjpeg`);
+ 
 });
 
 connectDB();
