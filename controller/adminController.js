@@ -183,13 +183,20 @@ export const login = async (req, res) => {
       isActive: true,
       lastSeenAt: new Date(),
     });
-    // Set cookies
+   // Set cookies
+    // const cookieOptions = {
+    //   httpOnly: true,
+    //   sameSite: 'Strict',
+    //   secure: process.env.NODE_ENV === 'production',
+    //   maxAge: 30 * 24 * 60 * 60 * 1000,
+    // };
+
     const cookieOptions = {
-      httpOnly: true,
-      sameSite: 'Strict',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    };
+  httpOnly: true,
+  sameSite: 'None',        // ✅ allow cross-domain cookies
+  secure: true,            // ✅ must be true with SameSite=None
+  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+};
     res.cookie('admin_token', token, cookieOptions);
     res.cookie('session_id', sessionId, cookieOptions);
 
