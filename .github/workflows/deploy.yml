@@ -20,6 +20,6 @@ jobs:
           key: ${{ secrets.VPS_KEY }}
           port: 22
           script: |
-            cd /root/AmbikaniketanBackend
+            cd AmbikaniketanBackend
             git pull origin main
             pm2 restart mybackend
