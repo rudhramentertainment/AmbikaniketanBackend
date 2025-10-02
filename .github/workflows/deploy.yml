@@ -9,12 +9,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: SSH into VPS and deploy
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: 194.238.19.57
           username: root
           key: ${{ secrets.VPS_KEY }}
+          port: 22
           script: |
-            /root/deploy.sh
-      
+            cd /root/AmbikaniketanBackend
+            git pull origin main
+            pm2 restart mybackend
