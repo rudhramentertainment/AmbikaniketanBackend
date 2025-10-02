@@ -86,7 +86,7 @@ app.use(
     methods: ["GET", "POST", "DELETE", "PUT"],
     credentials: true,
   })
-);
+);  
 
 // We need rawBody for webhook signature verification. Save rawBody on request.
 app.use(express.json({
