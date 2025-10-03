@@ -195,6 +195,7 @@ export const login = async (req, res) => {
   httpOnly: true,
   sameSite: 'None',        // ✅ allow cross-domain cookies
   secure: true,            // ✅ must be true with SameSite=None
+  path: '/',  
   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
 };
     res.cookie('admin_token', token, cookieOptions);
