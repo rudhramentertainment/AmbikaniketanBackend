@@ -35,7 +35,7 @@ dotenv.config();
 
 
 app.set('trust proxy', true);
-
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
@@ -63,20 +63,30 @@ app.use(cookieParser());
 // app.use(xss());
 app.use(morgan('combined'));  //logging middleware
 
-app.use((req, res, next) => {
-  const allowed = (process.env.FRONTEND_URL || '').split(',').map(s => s.trim().replace(/\/+$/, ''));
-  const origin = req.headers.origin ? req.headers.origin.trim().replace(/\/+$/, '') : undefined;
-  if (origin && allowed.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+const allowedOrigins = process.env.FRONTEND_URL.split(",").map(o =>
+  o.trim().replace(/\/+$/, "")
+);
+
+app.use(
+  cors({
+   origin: function (origin, callback) {
+  const cleanOrigin = origin ? origin.trim().replace(/\/+$/, "") : origin;
+
+  console.log("🌐 Incoming origin:", cleanOrigin);
+  console.log("✅ Allowed origins:", allowedOrigins);
+
+  if (!cleanOrigin || allowedOrigins.includes(cleanOrigin)) {
+    callback(null, true);
+  } else {
+    console.error("❌ Blocked by CORS:", cleanOrigin);
+    callback(new Error("Not allowed by CORS: " + cleanOrigin));
   }
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Id');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
-  
+},
+
+    methods: ["GET", "POST", "DELETE", "PUT"],
+    credentials: true,
+  })
+);  
 
 // We need rawBody for webhook signature verification. Save rawBody on request.
 app.use(express.json({
