@@ -5,7 +5,7 @@ import adminAuth from "../middleware/auth.js";
 
 const event = express.Router();
 
-event.post('/addevent',adminAuth,ploadEventImage.single("image"), addEvent);
+event.post('/addevent',adminAuth,uploadEventImage.single("image"), addEvent);
 event.get("/", getEvents);
 event.put("/:id",adminAuth ,uploadEventImage.single("image"), updateEvent);
 event.delete("/:id",adminAuth ,deleteEvent);
