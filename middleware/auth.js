@@ -10,47 +10,41 @@ const adminAuth = async (req, res, next) => {
     const token = req.cookies?.admin_token || (authHeader?.startsWith("Bearer ") ? authHeader.split(" ")[1] : null);
 
     if (!token) {
-      clearAuthCookies(res);
       return res.status(401).json({ message: "Not authenticated" });
     }
-
-    // 2. Verify JWT
+    // Verify JWT
     let payload;
     try {
       payload = jwt.verify(token, process.env.JWT_SECRET);
     } catch (err) {
-      clearAuthCookies(res);
       if (err.name === "TokenExpiredError") {
         return res.status(401).json({ message: "Session expired, please log in again" });
       }
       return res.status(401).json({ message: "Invalid token" });
     }
-
-    if (!payload?.id) {
-      clearAuthCookies(res);
+   if (!payload?.id) {
       return res.status(401).json({ message: "Invalid token payload" });
     }
 
-    // 3. Get sessionId
+    // sessionId from cookie or header
     const sessionId = req.cookies?.session_id || req.headers["x-session-id"];
     if (!sessionId) {
-      clearAuthCookies(res);
       return res.status(401).json({ message: "Session not found" });
     }
 
-    // 4. Find session + populate admin
+
+    // Find session
     const session = await Session.findOne({ sessionId, adminId: payload.id });
     if (!session || !session.isActive) {
-      clearAuthCookies(res);
       return res.status(401).json({ message: "Session invalid or logged out" });
     }
 
-    // 5. Fetch admin
-    const admin = await Admin.findById(payload.id).select("-passwordHash");
+       const admin = await Admin.findById(payload.id).select("-passwordHash");
     if (!admin) {
-      clearAuthCookies(res);
       return res.status(401).json({ message: "Admin not found" });
     }
+
+
 
     // 6. Update lastSeenAt
     session.lastSeenAt = new Date();
@@ -61,7 +55,7 @@ const adminAuth = async (req, res, next) => {
     next();
   } catch (err) {
     console.error("adminAuth error", err);
-    clearAuthCookies(res);
+   
     return res.status(401).json({ message: "Authentication failed" });
   }
 };
