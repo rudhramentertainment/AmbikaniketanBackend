@@ -1,6 +1,7 @@
 import express from "express";
 import { createOrder, deleteDonation, getAllDonations, getDonationById, getReceiptByToken, getSuccessfulDonations, updateDonation, verifyCheckoutSignature } from "../controller/donateController.js";
 import donateValidator from "../middleware/validators.js";
+import adminAuth from "../middleware/auth.js";
 
 const app = express.Router();
 
@@ -11,10 +12,10 @@ app.get("/receipt/:token",getReceiptByToken);
 
 //Managment
 
-app.get("/", getAllDonations);             
-app.get("/successful", getSuccessfulDonations);
-app.get("/:id", getDonationById);        
-app.put("/:id", updateDonation);        
-app.delete("/:id", deleteDonation);       
+app.get("/", adminAuth,getAllDonations);             
+app.get("/successful",adminAuth ,getSuccessfulDonations);
+app.get("/:id", adminAuth,getDonationById);        
+app.put("/:id",adminAuth ,updateDonation);        
+app.delete("/:id",adminAuth ,deleteDonation);       
 
 export default app;

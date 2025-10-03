@@ -7,13 +7,13 @@ const app = express.Router();
 
 app.put("/update-password", adminAuth, updatePassword);
 
-app.post("/addAdmin",addAdmin);
+app.post("/addAdmin",adminAuth,addAdmin);
 app.post("/login",login);
 app.post("/logout", adminAuth,logout);
-app.post("/addadmin", addAdmin);
-app.get("/", getAdmins);
-app.put("/:id", updateAdmin);
-app.delete("/:id", deleteAdmin);
+app.post("/addadmin",adminAuth, addAdmin);
+app.get("/",adminAuth ,getAdmins);
+app.put("/:id",adminAuth, updateAdmin);
+app.delete("/:id",adminAuth, deleteAdmin);
 
 //session details
 

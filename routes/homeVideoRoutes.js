@@ -3,14 +3,15 @@ import upload, { uploadVideo } from "../middleware/upload.js";
 import { addHomeVideo, deleteVideo, getAllVideos, updateVideo } from "../controller/homeVideoController.js";
 import path from "path";
 import fs from "fs";
+import adminAuth from "../middleware/auth.js";
 
 
 const homeVideo = express.Router();
 
-homeVideo.post('/addvideo',uploadVideo.single("video"),addHomeVideo);
-homeVideo.delete("/deletevideo/:id", deleteVideo);
-homeVideo.get("/getVideo", getAllVideos);
-homeVideo.put("/updatevideo", uploadVideo.single("video"),updateVideo);
+homeVideo.post('/addvideo',adminAuth,uploadVideo.single("video"),addHomeVideo);
+homeVideo.delete("/deletevideo/:id",adminAuth ,deleteVideo);
+homeVideo.get("/getVideo" ,getAllVideos);
+homeVideo.put("/updatevideo",adminAuth ,uploadVideo.single("video"),updateVideo);
 
 homeVideo.get("/stream/:filename", (req, res) => {
   const filePath = path.join(process.cwd(), "uploads/videos", req.params.filename);
