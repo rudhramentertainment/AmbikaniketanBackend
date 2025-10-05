@@ -32,7 +32,7 @@ const createUploader = (folder, type) => {
     }
   };
 
-  return multer({ storage, fileFilter,limits: { fileSize: 200 * 1024 * 1024 }, });
+  return multer({ storage, fileFilter, limits: { fileSize: 500 * 1024 * 1024 }, });
 };
 
 

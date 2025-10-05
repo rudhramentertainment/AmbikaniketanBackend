@@ -27,15 +27,15 @@ import fetch from "node-fetch";
 import { URLSearchParams } from 'url';
 
 
-
+dotenv.config();
 
 const app = express();
 
-dotenv.config();
+
 
 
 app.set('trust proxy', true);
-app.use(express.json({ limit: "200mb" }));
+app.use(express.json({ limit: "500mb" }));
 app.use(express.urlencoded({ limit: "200mb", extended: true }));
 app.use(cookieParser());
 
