@@ -191,12 +191,14 @@ export const login = async (req, res) => {
     //   maxAge: 30 * 24 * 60 * 60 * 1000,
     // };
 
-    const cookieOptions = {
+    // Login handler
+const cookieOptions = {
   httpOnly: true,
-  sameSite: 'None',        // ✅ allow cross-domain cookies
-  secure: true,            // ✅ must be true with SameSite=None
-  path: '/',  
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+  secure: true,                // must be true with SameSite=None
+  sameSite: "None",
+  domain: ".santadmin.cloud",  // important — shares cookie with frontend + subdomains
+  path: "/",
+  maxAge: 30 * 24 * 60 * 60 * 1000,
 };
     res.cookie('admin_token', token, cookieOptions);
     res.cookie('session_id', sessionId, cookieOptions);
@@ -205,7 +207,7 @@ export const login = async (req, res) => {
       success: true,
       message: 'Login successful',
       user: { username: admin.username, role: admin.role },
-      token, // for Safari/iOS fallback
+      // for Safari/iOS fallback
     });
   } catch (err) {
     console.error("admin login", err);
