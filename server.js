@@ -35,8 +35,8 @@ dotenv.config();
 
 
 app.set('trust proxy', true);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "200mb" }));
+app.use(express.urlencoded({ limit: "200mb", extended: true }));
 app.use(cookieParser());
 
 //security middlewares
@@ -89,12 +89,6 @@ app.use(
 );  
 
 // We need rawBody for webhook signature verification. Save rawBody on request.
-app.use(express.json({
-  verify: (req, res, buf) => {
-    req.rawBody = buf.toString('utf8');
-  },
-  limit: '1mb'
-}));
 
 //admin routes
 app.use('/api/admin',adminRoutes);
